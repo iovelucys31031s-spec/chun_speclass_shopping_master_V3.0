@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我是購物小達人</title>
+
+    <style>
+        @font-face {
+            font-family: 'Iansui';
+            src: url('https://cdn.jsdelivr.net/npm/iansui@latest/data/Iansui-Regular.woff2') format('woff2');
+            font-weight: normal; font-style: normal; font-display: swap;
+        }
+        :root {
+            --rose-quartz: #F7CAC9; --serenity: #92A8D1; --rose-dark: #d68c8b; --serenity-dark: #6e86b3;
+            --gradient-bar: linear-gradient(90deg, #92A8D1 0%, #F7CAC9 100%);
+            --text-boss: #FFFFFF; --text-cust: #444444; --bg-boss-btn: #5b7bb2; --bg-cust-btn: #e07b7b;
+        }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; width: 100%; overflow: hidden; }
+        body {
+            font-family: "Iansui", "Rounded Mplus 1c", "Microsoft JhengHei", sans-serif;
+            margin: 0; padding: 0;
+            background: linear-gradient(180deg, var(--serenity) 0%, var(--rose-quartz) 100%);
+            display: flex; justify-content: center; align-items: flex-start; padding-top: 10px;
+        }
+        .container {
+            width: 96%; max-width: 1000px; height: calc(100dvh - 110px); 
+            background: rgba(255, 255, 255, 0.96); border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); padding: 15px;
+            display: flex; flex-direction: column; position: relative; overflow: hidden;
+        }
+        .boss-mode .container { border: 5px solid var(--serenity); }
+        .boss-mode h1, .boss-mode h2, .boss-mode p, .boss-mode label { color: var(--text-cust); }
+        .boss-mode #game-view h1 { color: var(--serenity-dark); }
+        .cust-mode .container { border: 5px solid var(--rose-quartz); }
+        h1 { text-align: center; margin: 5px 0 10px 0; font-size: clamp(1.5rem, 4vw, 2.5rem); color: #444; flex-shrink: 0; }
+        h2 { text-align: center; margin: 5px 0; font-size: clamp(1.2rem, 3vw, 1.8rem); color: #555; flex-shrink: 0; }
+        .hidden { display: none !important; }
+        .btn {
+            font-size: clamp(1rem, 2.5vw, 1.4rem); padding: 10px 20px; margin: 5px;
+            border: none; border-radius: 50px; cursor: pointer; transition: all 0.2s;
+            font-weight: bold; box-shadow: 0 3px 5px rgba(0,0,0,0.15);
+            display: inline-block; color: white; flex-shrink: 0; font-family: inherit;
+        }
+        .btn:active { transform: scale(0.95); } .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background-color: var(--serenity-dark); } .btn-danger { background-color: var(--rose-dark); }
+        .btn-success { background-color: #66bb6a; } .btn-warning { background-color: #ff9800; } 
+        .btn-info { background-color: #607d8b; } .btn-light { background-color: #f0f0f0; color: #666; border: 1px solid #ccc; }
+        .btn-action { 
+            font-size: clamp(1.4rem, 4vw, 1.8rem); padding: 12px 60px; margin: 10px auto 0 auto; 
+            white-space: nowrap; width: auto; display: block; box-shadow: 0 5px 15px rgba(0,0,0,0.2); flex-shrink: 0;
+        }
+        .boss-mode .btn-action { background-color: var(--bg-boss-btn); }
+        .cust-mode .btn-action { background-color: var(--bg-cust-btn); }
+        .btn-speak {
+            background-color: #fff; border: 2px solid #ddd; border-radius: 50%; width: 50px; height: 50px;
+            font-size: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s;
+        }
+        .btn-speak:active { transform: scale(0.9); background-color: #f0f0f0; }
+        .btn-speak.speaking { background-color: var(--rose-quartz); border-color: var(--rose-dark); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        input, select, textarea {
+            font-size: 1.2rem; padding: 8px; margin: 5px 0; border-radius: 8px; border: 2px solid #ddd;
+            width: 80%; display: block; margin-left: auto; margin-right: auto; text-align: center; font-family: inherit;
+        }
+        .store-name-input { font-size: 1.3rem; font-weight: bold; padding: 5px; width: auto; border: 2px dashed #ccc; background: #fff; display: inline-block; margin: 0; text-align: left; border-radius: 5px; color: #333; flex: 1; min-width: 100px; }
+        .store-name-input:focus { border-color: var(--serenity); outline: none; background: #fdfdfd; }
+        #game-view { display: flex; flex-direction: column; height: 100%; width: 100%; overflow: hidden; }
+        .script-bubble {
+            flex: 0 0 auto; background: #fff; border-radius: 15px; padding: 10px; margin: 5px auto 10px auto;
+            font-size: clamp(1.2rem, 3.5vw, 2rem); font-weight: bold; text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); color: #333; width: 98%; border: 3px solid; line-height: 1.3;
+            min-height: 90px; display: flex; align-items: center; justify-content: center; gap: 15px;
+        }
+        .boss-mode .script-bubble { border-color: var(--serenity-dark); color: var(--serenity-dark); }
+        .cust-mode .script-bubble { border-color: var(--rose-dark); color: var(--rose-dark); }
+        .speech-text { flex-grow: 1; text-align: center; }
+        .boss-l5-hint {
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
+            font-size: clamp(0.9rem, 2vw, 1.4rem); color: #e65100; background: #fff3e0; 
+            padding: 8px; border-radius: 8px; margin-bottom: 10px; border: 2px dashed #ff9800; text-align: center; flex-shrink: 0;
+        }
+        .card-panel {
+            background: rgba(240, 248, 255, 0.5); border: 2px solid #e0e0e0; flex: 1 1 auto; padding: 10px; border-radius: 15px; margin-bottom: 5px;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; 
+            overflow-y: auto; -webkit-overflow-scrolling: touch; width: 100%; min-height: 0;
+        }
+        .item-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; padding-bottom: 10px; }
+        .cust-menu-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            width: 100%;
+            padding-bottom: 10px;
+            align-content: flex-start;
+        }
+        .item-card {
+            background: white; border-radius: 10px; padding: 8px; width: 120px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1); position: relative; cursor: pointer; color: #333; border: 3px solid transparent;
+            transition: transform 0.1s; flex-shrink: 0;
+        }
+        .item-card:active { transform: scale(0.95); }
+        .item-card.selected { border-color: var(--rose-dark); background-color: #fff0f0; }
+        .item-card.disabled-item { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); background-color: #eee; }
+        .item-img { font-size: 3rem; display: block; margin-bottom: 5px; }
+        .item-img-real { width: 70px; height: 70px; object-fit: contain; display: block; margin: 0 auto 5px auto; }
+        .item-name { font-size: 1.1rem; font-weight: bold; display: block; }
+        .item-stock { font-size: 0.9rem; color: #666; display: block;}
+        .item-price { color: #d32f2f; font-weight: bold; font-size: 1.2rem; margin-top: 2px;}
+        .badge-oos { 
+            position: absolute; top: 5px; right: 5px; width: auto; height: auto; 
+            background: rgba(255, 255, 255, 0.9); border-radius: 5px; padding: 2px 5px;
+            color: red; font-size: 1.2rem; font-weight: bold; border: 2px solid red; transform: rotate(15deg); z-index: 10;
+        }
+        .item-card.oos-style .item-img, .item-card.oos-style .item-img-real { filter: grayscale(0.8) opacity(0.6); }
+        .check-item {
+            font-size: 1.4rem; margin: 5px; padding: 10px; background: white; border-radius: 10px; width: 95%;
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: 2px solid #eee;
+        }
+        .check-item.checked { background: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
+        .check-box { width: 30px; height: 30px; border: 2px solid #ccc; display: inline-block; border-radius: 5px; background:white;}
+        .check-item.checked .check-box { background: #2e7d32; border-color: #2e7d32; }
+        .check-item.checked .check-box::after { content: '✔'; display:block; color:white; font-size:22px; text-align:center; line-height:28px; }
+        .pos-list-container { width: 100%; overflow-y: auto; background: #fff; border-radius: 10px; border: 1px solid #ddd; }
+        .pos-table { width: 100%; border-collapse: collapse; }
+        .pos-table th { background: #f0f0f0; padding: 5px; font-size: 0.9rem; color: #666; position: sticky; top: 0; }
+        .pos-table td { padding: 8px 5px; border-bottom: 1px solid #eee; font-size: 1.1rem; text-align: center;}
+        .pos-btn-minus, .pos-btn-del { width: 28px; height: 28px; border-radius: 5px; border: none; color: white; font-weight: bold; cursor: pointer; }
+        .pos-btn-minus { background: #FF9800; } .pos-btn-del { background: #d32f2f; }
+        .quote-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 1.2rem; }
+        .quote-table th { border-bottom: 2px solid #ccc; color: #555; padding: 5px; font-size: 1rem; }
+        .quote-table td { padding: 8px; border-bottom: 1px dashed #eee; }
+        .quote-total-cell { color: #d32f2f; font-weight: bold; }
+        .big-input { 
+            font-size: 2.5rem; width: 180px; height: 60px; border: 4px solid var(--serenity-dark); border-radius: 15px; 
+            color: #333; background: #fff; text-align: center; 
+        }
+        .math-hint-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+        .math-input-group { display: flex; flex-direction: column; align-items: center; }
+        .math-label { font-size: 0.9rem; color: #666; margin-bottom: 5px; }
+        .math-gap { font-size: 1.8rem; width: 100px; padding: 5px; border: 2px solid #ccc; border-radius: 5px; text-align: center; }
+        .math-symbol { font-size: 2rem; font-weight: bold; color: var(--rose-dark); }
+        .swap-arrow { font-size: 2rem; color: var(--rose-dark); font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .swap-text { font-size: 1rem; color: #666; }
+        #admin-view { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+        .admin-title-bar { flex: 0 0 auto; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        #admin-content-scroll { flex: 1 1 auto; overflow-y: auto; min-height: 0; padding-right: 5px; padding-bottom: 20px; }
+        .admin-store-box { background: white; padding: 10px 15px; margin: 10px 0; border-radius: 10px; color: #333; text-align: left; border-left: 8px solid var(--serenity); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .store-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .store-toggle-icon { font-size: 1.5rem; transition: transform 0.3s; margin-right: 10px; color:#666; }
+        .store-items { margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+        .store-items.collapsed { display: none; }
+        .admin-item-row { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f0f0f0; padding: 15px; background: #fafafa; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .file-upload-btn { font-size: 0.8rem; padding: 5px 10px; background: #f9f9f9; border: 1px solid #ccc; cursor: pointer; border-radius: 5px; }
+        .csv-import-box { background: #f0f4f8; border-radius: 10px; padding: 10px; margin-bottom: 10px; border: 2px dashed #92A8D1; }
+        .sync-box { background: #e3f2fd; border-radius: 10px; padding: 10px; margin-bottom: 10px; border: 2px solid #92A8D1; display:flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap:10px;}
+        .settings-section { background: #fff3e0; border-radius: 10px; padding: 10px; margin-bottom: 10px; border: 2px solid #ff9800; }
+        .oos-row { background: #fff8e1; border: 1px solid #ffcc80; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+        .oos-row label { color: #e65100; font-size: 0.9rem; margin-bottom: 5px; display: block; text-align: left; }
+        .bottom-progress-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 90px; background: white; display: flex; align-items: flex-start; justify-content: center; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 1000; padding-top: 10px; }
+        .progress-track-container { position: absolute; bottom: 25px; left: 0; right: 0; height: 8px; margin: 0 calc(100% / var(--step-count) / 2); z-index: 0; }
+        .progress-track-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #eee; border-radius: 4px; }
+        .progress-track-fill { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--gradient-bar); border-radius: 4px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(146, 168, 209, 0.5); }
+        .progress-step { flex: 1; text-align: center; position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-start; }
+        .progress-step span { font-size: 1.1rem; color: #bbb; font-weight: bold; display: block; margin-top: 5px; transition: color 0.3s; }
+        .progress-step::after { content: ''; width: 20px; height: 20px; background: #ddd; border-radius: 50%; position: absolute; bottom: 19px; left: 50%; transform: translateX(-50%); border: 3px solid white; transition: all 0.4s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .progress-step.active span { color: var(--serenity-dark); transform: scale(1.1); }
+        .progress-step.active::after { background: var(--rose-dark); transform: translateX(-50%) scale(1.3); box-shadow: 0 0 10px var(--rose-quartz); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-box { background: white; padding: 40px; border-radius: 20px; width: 80%; max-width: 500px; text-align: left; box-shadow: 0 20px 50px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+        .modal-box h3 { text-align: center; }
+        #setup-scroll-area { flex: 1; overflow-y: auto; padding: 5px; min-height: 0; }
+        .edit-img-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; display: flex; justify-content: center; align-items: center; }
+        .edit-img-box { background: white; padding: 20px; border-radius: 15px; width: 300px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .img-preview-box { width: 100px; height: 100px; border: 2px dashed #ccc; margin: 10px auto; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .img-preview-box img { width: 100%; height: 100%; object-fit: contain; }
+        .img-preview-box span { font-size: 3rem; }
+        .admin-control-bar { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px; background: #f0f4c3; border-radius: 10px; border: 2px solid #c0ca33; }
+        .admin-control-group { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+        
+        /* 雲端狀態徽章 CSS */
+        .sync-badge {
+            display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+            border-radius: 50px; font-size: 0.9rem; font-weight: bold; border: 1px solid transparent;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); white-space: nowrap;
+        }
+        .sync-badge.offline { background: #fff8e1; color: #f57f17; border-color: #ffe082; }
+        .sync-badge.online { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+        .sync-badge.connecting { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+        .sync-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .sync-badge.offline .sync-dot { background-color: #ffb300; }
+        .sync-badge.online .sync-dot { background-color: #4caf50; animation: pulse-green 2s infinite; }
+        .sync-badge.connecting .sync-dot { background-color: #2196f3; animation: pulse-blue 1s infinite; }
+        .sync-time { font-weight: normal; font-size: 0.8rem; opacity: 0.8; margin-left: 4px; }
+        
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(76, 175, 80, 0); } 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); } }
+        @keyframes pulse-blue { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* Setup Guide Modal CSS */
+        .setup-guide-box { border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px; margin-bottom: 15px; background: #fafafa; }
+        .setup-guide-box h4 { margin-top: 0; color: var(--serenity-dark); border-bottom: 2px solid #eee; padding-bottom: 8px; margin-bottom: 10px; font-size: 1.1rem;}
+        .setup-guide-box ol { padding-left: 25px; margin-bottom: 0; color: #444; }
+        .setup-guide-box li { margin-bottom: 10px; font-size: 0.95rem; line-height: 1.5; }
+        .code-block { background: #282c34; color: #abb2bf; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; overflow-x: auto; white-space: pre-wrap; margin-top: 8px; border: 1px solid #1e2227; }
+    </style>
+</head>
+<body id="body-tag">
+
+<!-- Google Apps Script Backend Code -->
+<script id="gas-backend-code" type="text/plain">
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var doc = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = doc.getSheets()[0];
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["最後更新時間", "資料專屬ID", "完整內容(JSON)"]);
+    }
+    var payload = JSON.parse(e.postData.contents);
+    var timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    var dataRange = sheet.getDataRange(); 
+    var values = dataRange.getValues(); 
+    var rowIndex = -1;
+    for (var i = 1; i < values.length; i++) { 
+      if (values[i][1] === payload.id) { rowIndex = i + 1; break; } 
+    }
+    var jsonStr = typeof payload.data === 'string' ? payload.data : JSON.stringify(payload.data); 
+    if (rowIndex !== -1) { 
+      sheet.getRange(rowIndex, 1, 1, 3).setValues([[timestamp, payload.id, jsonStr]]); 
+    } else { 
+      sheet.appendRow([timestamp, payload.id, jsonStr]); 
+    } 
+    return ContentService.createTextOutput(JSON.stringify({"status": "success"})).setMimeType(ContentService.MimeType.JSON);
+  } catch(ex) { 
+    return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": ex.message})).setMimeType(ContentService.MimeType.JSON); 
+  } finally { lock.releaseLock(); }
+}
+
+function doGet(e) {
+  var doc = SpreadsheetApp.getActiveSpreadsheet(); 
+  var sheet = doc.getSheets()[0];
+  var result = { data: null };
+  if (sheet.getLastRow() === 0) return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  var values = sheet.getDataRange().getValues();
+  for (var i = 1; i < values.length; i++) {
+    var id = values[i][1]; var jsonStr = values[i][2];
+    if (id === 'shopping_data' && jsonStr) { try { result.data = JSON.parse(jsonStr); } catch(err){} break; }
+  }
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}
+</script>
+
+<div class="container" id="app">
+    <!-- 0. 首頁 -->
+    <div id="home-view">
+        <h1 style="color:#444; font-size: 3rem; margin-top: 10vh; font-weight:900;">我是購物小達人</h1>
+        <br>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:20px;">
+            <button class="btn btn-primary" style="width:280px; padding:20px; font-size:1.5rem;" onclick="promptPassword('game')">🎮 開始遊戲</button>
+            <button class="btn btn-danger" style="width:280px; padding:20px; font-size:1.5rem;" onclick="promptPassword('admin')">🛠️ 商店後台管理</button>
+        </div>
+    </div>
+
+    <!-- 1. 設定頁 -->
+    <div id="setup-view" class="hidden" style="display:flex; flex-direction:column; height:100%;">
+        <h2 style="color:#444; font-size:2rem; border-bottom: 2px solid #eee; padding-bottom:10px; flex-shrink:0;">⚙️ 課程設定</h2>
+        
+        <div id="setup-scroll-area">
+            <label>1. 選擇商店 (雙機需一致)：</label>
+            <select id="store-select" onchange="updateOOSSelector()"></select>
+            <label>2. 選擇劇本 (雙機需一致)：</label>
+            <select id="level-select" onchange="updateSetupUI()">
+                <option value="1">Level 1：自由選購 (基礎)</option>
+                <option value="2">Level 2：清單購物 (視覺指定)</option>
+                <option value="3">Level 3：自由點餐 (POS/聽覺)</option>
+                <option value="4">Level 4：指定點餐 (POS/視覺任務)</option>
+                <option value="5">Level 5：缺貨替代 (應變)</option>
+                <option value="6">Level 6：魔王混合 (隨機)</option>
+            </select>
+            <div id="setup-quantity">
+                <label id="quantity-label">3. 本回合要買幾樣商品？</label>
+                <input type="number" id="item-quantity" value="2" min="1" max="5">
+            </div>
+            
+            <div id="setup-oos-area" class="hidden" style="background:#fff3e0; padding:10px; border-radius:10px; border:2px dashed #ff9800; margin:5px 0;">
+                <label style="color:#e65100;">🚨 指定缺貨數量：</label>
+                <input type="number" id="oos-count" value="1" min="1" max="3" onchange="updateOOSSelector()">
+                <div id="oos-pairs-container" style="margin-top:10px;"></div>
+                <hr style="border-top:1px dashed #ffb74d;">
+                <label style="color:#e65100;">🤔 缺貨時客人的回應方式：</label>
+                <select id="alt-response-mode">
+                    <option value="specific">那請問有 [替代品] 嗎？ (簡單/直接引導)</option>
+                    <option value="open">請問還有什麼？ (進階/社交應對)</option>
+                </select>
+            </div>
+
+            <div id="setup-duplicate" class="hidden">
+                <label>4. 清單品項是否可重複？</label>
+                <select id="allow-duplicate">
+                    <option value="no">不重複</option>
+                    <option value="yes">可重複</option>
+                </select>
+            </div>
+            <label>設定本平板角色：</label>
+            <select id="role-select" onchange="updateSetupUI()">
+                <option value="boss">我是老闆</option>
+                <option value="cust">我是客人</option>
+            </select>
+            <div id="boss-settings" class="hidden">
+                <label>數學難度：</label>
+                <select id="math-diff">
+                    <option value="10">10以內加減</option>
+                    <option value="100s">100以內不進退</option>
+                    <option value="100h">100以內進退位</option>
+                    <option value="mix">混合模式</option>
+                </select>
+                <label style="color:var(--rose-dark); font-weight:bold;">找錢算式提示：</label>
+                <select id="math-hint-mode">
+                    <option value="direct">模式A：直接給算式 (100-76=__)</option>
+                    <option value="fill">模式B：需填空 (___-___=___)</option>
+                </select>
+                <div id="boss-subtotal-setting-container" class="hidden">
+                    <label style="color:var(--serenity-dark); font-weight:bold;">結帳顯示總價 (單項)：</label>
+                    <select id="show-subtotal-mode">
+                        <option value="yes">顯示 (10 x 2 = 20) [簡單]</option>
+                        <option value="no">隱藏 (10 x 2 = ?) [困難]</option>
+                    </select>
+                </div>
+            </div>
+            <div id="cust-settings" class="hidden">
+                <div id="menu-setting" class="hidden">
+                    <label>是否顯示圖片菜單 (L3專用)：</label>
+                    <select id="show-menu">
+                        <option value="yes">顯示菜單</option>
+                        <option value="no">隱藏 (聽覺記憶)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div style="display:flex; justify-content:center; margin-top: 10px; gap: 10px; padding-bottom: 5px; flex-shrink:0;">
+            <button class="btn btn-primary" onclick="startGame()">🚀 進入賣場</button>
+            <button class="btn btn-danger" onclick="backToHome()">🏠 返回首頁</button>
+        </div>
+    </div>
+
+    <!-- 遊戲主畫面 -->
+    <div id="game-view" class="hidden">
+        <div id="script-area" class="script-bubble hidden"></div>
+        <div id="card-area" class="card-panel"></div>
+        <button id="main-action-btn" class="btn btn-action" onclick="nextStep()">下一步</button>
+    </div>
+
+    <!-- 後台管理 -->
+    <div id="admin-view" class="hidden">
+        <div class="admin-title-bar">
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap: 10px; flex-wrap: wrap;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <h2 style="color:#444; margin:0;">📦 商店後台管理</h2>
+                    <button class="btn btn-danger" style="font-size:0.9rem; padding:5px 10px; margin:0;" onclick="backToHome()">🏠 首頁</button>
+                </div>
+                
+                <!-- 雲端狀態徽章 -->
+                <div id="cloud-status-badge" class="sync-badge offline" onclick="openConfigModal()" style="cursor: pointer;" title="點擊設定雲端同步">
+                    <span class="sync-dot"></span>
+                    <span id="cloud-status-text">單機模式</span>
+                    <span id="cloud-sync-time" class="sync-time"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-content-scroll">
+            <div class="sync-box">
+                <span style="font-weight:bold; color:#555; width:100%; text-align:center;">🔄 跨裝置資料轉移</span>
+                <button class="btn btn-success" style="font-size:0.9rem; padding:8px 15px; margin:0;" onclick="exportJSON()">📤 匯出設定檔</button>
+                <label class="btn btn-warning" style="font-size:0.9rem; padding:8px 15px; margin:0; cursor:pointer;">
+                    📥 匯入設定檔
+                    <input type="file" accept=".json" style="display:none" onchange="importJSON(this)">
+                </label>
+                <button class="btn btn-primary" style="font-size:0.9rem; padding:8px 15px; margin:0;" onclick="openConfigModal()">☁️ Google 試算表同步設定</button>
+            </div>
+
+            <!-- 分享雙機連線網址區塊 -->
+            <div id="link-share-container" class="hidden sync-box" style="background:#e8f5e9; border-color:#81c784; flex-direction:column; align-items:stretch;">
+                <span style="font-weight:bold; color:#2e7d32;">🔗 雙機連線專用網址</span>
+                <p style="font-size:0.8rem; color:#4caf50; margin:0 0 5px 0;">請將此網址複製並傳送給另一台平板，打開後雙方將即時同步！</p>
+                <div style="display:flex; gap:5px; width:100%;">
+                    <input type="text" id="share-link-input" readonly class="w-full p-2 border border-green-300 rounded font-mono text-xs" style="flex:1;">
+                    <button onclick="copyShareLink()" class="btn btn-success" style="font-size:0.8rem; padding:5px 10px; margin:0; white-space:nowrap;">複製網址</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h4 style="margin:5px 0;">🎙️ TTS 語音與發音校正</h4>
+                <div style="margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+                    <label>選擇語音包：</label>
+                    <select id="tts-voice-select" onchange="updateTTSVoice()" style="flex:1;"><option value="">預設</option></select>
+                    <button class="btn btn-info" onclick="previewVoice()" style="padding:5px 10px; font-size:0.9rem;">🔊 試聽</button>
+                </div>
+                <div style="border-top:1px dashed #ccc; padding-top:5px;">
+                    <label>發音校正字典 (例如: 和->翰)：</label>
+                    <div id="pronounce-list"></div>
+                    <div style="display:flex; gap:5px; margin-top:5px;">
+                        <input type="text" id="p-key" placeholder="原本的字 (和)" style="flex:1;">
+                        <span>➡</span>
+                        <input type="text" id="p-val" placeholder="唸法 (翰)" style="flex:1;">
+                        <button class="btn btn-success" style="padding:5px 10px; font-size:0.9rem;" onclick="addPronounce()">新增</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section" style="border-color:#f44336; background:#ffebee;">
+                <h4 style="margin:5px 0;">🔐 安全性設定</h4>
+                <div style="margin-bottom:10px; font-size:1.1rem; color:#d32f2f;">
+                    目前設定密碼：<span id="admin-current-pwd" style="font-weight:bold; background:white; padding:2px 8px; border-radius:4px;"></span>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <button class="btn btn-info" style="font-size:0.9rem; padding:5px 10px;" onclick="changePassword()">修改後台密碼</button>
+                    <button class="btn btn-danger" style="font-size:0.9rem; padding:5px 10px;" onclick="resetPasswordOnly()">⚠️ 恢復預設密碼</button>
+                </div>
+            </div>
+
+            <div class="csv-import-box">
+                <h4 style="margin:5px 0;">📁 批量新增商品 (CSV)</h4>
+                <div style="display:flex; justify-content:center; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <button class="btn" style="font-size:0.9rem; padding:5px 10px; background:#fff; color:#333; border:1px solid #ccc;" onclick="downloadSampleCSV()">⬇️ 下載範例</button>
+                    <label class="btn btn-primary" style="font-size:0.9rem; padding:5px 10px; cursor:pointer;">
+                        📂 選擇CSV
+                        <input type="file" accept=".csv" style="display:none" onchange="processCSV(this)">
+                    </label>
+                </div>
+                <p style="font-size:0.8rem; color:#666; margin:5px 0 0 0;">格式：商店名稱,商品名稱,庫存</p>
+            </div>
+            
+            <div class="admin-control-bar">
+                <div style="flex:1;">
+                    <label style="font-weight:bold; color:#556b2f; margin-right:5px;">🖼️ 遊戲顯示圖片優先級：</label>
+                    <select id="global-display-mode" onchange="updateGlobalDisplayMode(this.value)" style="padding:5px; font-size:1rem; width:auto; display:inline-block; border:1px solid #c0ca33;">
+                        <option value="emoji">Emoji 模式</option>
+                        <option value="photo">圖片模式 (無圖則顯示 Emoji)</option>
+                    </select>
+                </div>
+                <div class="admin-control-group">
+                     <button class="btn btn-info" style="font-size:1rem; padding:8px 15px; margin:0;" onclick="manualSave()">💾 儲存設定</button>
+                     <button class="btn btn-success" style="font-size:1rem; padding:8px 15px; margin:0;" onclick="addNewStore()">+ 新增商店</button>
+                     <button class="btn btn-primary" style="font-size:1rem; padding:8px 15px; margin:0;" onclick="resetDefaultData()">重置預設資料</button>
+                </div>
+            </div>
+
+            <hr style="border-top:2px dashed #eee; margin:20px 0;">
+            <div id="admin-list"></div>
+        </div>
+    </div>
+</div>
+
+<div id="progress-bar" class="bottom-progress-bar hidden"></div>
+
+<div id="pwd-modal" class="modal-overlay hidden">
+    <div class="modal-box" style="text-align:center;">
+        <h3 style="font-size:1.8rem; margin-bottom:20px;">🔒 請輸入密碼</h3>
+        <input type="password" id="modal-pwd-input" style="font-size:2rem; width:100%; margin-bottom:20px;" onkeydown="if(event.key === 'Enter') checkPassword()">
+        <br>
+        <button class="btn btn-primary" onclick="checkPassword()">確認</button>
+        <button class="btn btn-danger" onclick="closeModal()">取消</button>
+    </div>
+</div>
+
+<!-- GAS Setup Guide & Config Modal -->
+<div id="config-modal" class="modal-overlay hidden" style="z-index: 3000;">
+    <div class="modal-box setup-guide-box" style="max-width: 800px; padding: 25px; width: 95%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+            <h3 style="margin: 0; font-size: 1.5rem; color: var(--serenity-dark);">☁️ Google 試算表 雲端同步教學</h3>
+            <button onclick="document.getElementById('config-modal').classList.add('hidden')" style="background:none; border:none; font-size: 1.5rem; cursor:pointer; color:#888;">&times;</button>
+        </div>
+        
+        <div style="max-height: 60vh; overflow-y: auto; padding-right: 10px; margin-bottom: 15px;" id="setup-guide-scroll">
+            <p style="font-size: 0.95rem; color: #555; margin-bottom: 15px; font-weight:bold;">
+                完全免費！透過 Google 試算表，您可以讓兩台平板（老闆與客人）即時同步商店設定與庫存。
+            </p>
+            
+            <div class="guide-step">
+                <h4 style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                    <span>步驟 1：建立試算表並貼上程式碼</span>
+                    <button onclick="copyGasCode()" class="btn btn-primary" style="font-size:0.8rem; padding:4px 8px; margin:0;">點此複製程式碼</button>
+                </h4>
+                <ol style="font-size: 0.9rem; color: #444; line-height: 1.5; padding-left: 20px;">
+                    <li>前往您的 <strong>Google 雲端硬碟</strong>，新增一個全新的空白「Google 試算表」。</li>
+                    <li>點擊上方選單的 <strong>「擴充功能」 ➔ 「Apps Script」</strong>。</li>
+                    <li>將裡面的英文全部刪除，並貼上剛剛複製的程式碼。</li>
+                </ol>
+                <div class="code-block" style="max-height: 200px; overflow-y: auto; text-align: left;">function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var doc = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = doc.getSheets()[0];
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["最後更新時間", "資料專屬ID", "完整內容(JSON)"]);
+    }
+    var payload = JSON.parse(e.postData.contents);
+    var timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    var dataRange = sheet.getDataRange(); 
+    var values = dataRange.getValues(); 
+    var rowIndex = -1;
+    for (var i = 1; i < values.length; i++) { 
+      if (values[i][1] === payload.id) { rowIndex = i + 1; break; } 
+    }
+    var jsonStr = typeof payload.data === 'string' ? payload.data : JSON.stringify(payload.data); 
+    if (rowIndex !== -1) { 
+      sheet.getRange(rowIndex, 1, 1, 3).setValues([[timestamp, payload.id, jsonStr]]); 
+    } else { 
+      sheet.appendRow([timestamp, payload.id, jsonStr]); 
+    } 
+    return ContentService.createTextOutput(JSON.stringify({"status": "success"})).setMimeType(ContentService.MimeType.JSON);
+  } catch(ex) { 
+    return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": ex.message})).setMimeType(ContentService.MimeType.JSON); 
+  } finally { lock.releaseLock(); }
+}
+
+function doGet(e) {
+  var doc = SpreadsheetApp.getActiveSpreadsheet(); 
+  var sheet = doc.getSheets()[0];
+  var result = { data: null };
+  if (sheet.getLastRow() === 0) return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  var values = sheet.getDataRange().getValues();
+  for (var i = 1; i < values.length; i++) {
+    var id = values[i][1]; var jsonStr = values[i][2];
+    if (id === 'shopping_data' && jsonStr) { try { result.data = JSON.parse(jsonStr); } catch(err){} break; }
+  }
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}</div>
+            </div>
+
+            <div class="guide-step">
+                <h4 style="margin-bottom: 8px;">步驟 2：部署為網頁應用程式</h4>
+                <ol style="font-size: 0.9rem; color: #444; line-height: 1.5; padding-left: 20px;">
+                    <li>點擊右上角藍色按鈕 <strong>「部署」 ➔ 「新增部署作業」</strong>。</li>
+                    <li>點選左邊齒輪，選擇 <strong>「網頁應用程式」</strong>。</li>
+                    <li><strong style="color:red;">【非常重要】</strong>「誰可以存取」請務必下拉選擇 <strong style="color:red;">「所有人 (Anyone)」</strong>。</li>
+                    <li>點擊部署並核准權限後，您會得到一串「網頁應用程式網址」，請複製它。</li>
+                </ol>
+            </div>
+
+            <div class="guide-step" style="border-left-color: var(--rose-dark); background: #fff0f0;">
+                <h4 style="margin-bottom: 8px;">步驟 3：在此貼上網址並儲存</h4>
+                <input type="text" id="gas-url-input" style="width:100%; font-size:0.9rem; border:2px solid #ccc; padding:10px; border-radius:8px; font-family: monospace;" placeholder="https://script.google.com/macros/s/.../exec">
+                <p id="config-error-msg" style="color:red; font-size:0.85rem; display:none; margin-top: 5px; font-weight: bold;">請輸入有效的 Google Apps Script 網址 (須以 http 開頭)。</p>
+            </div>
+        </div>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid #eee; padding-top: 15px;">
+            <button class="btn btn-light" style="font-size: 0.9rem; padding: 8px 15px;" onclick="clearGasConfig()">🧹 斷開連線 (返回單機)</button>
+            <div style="display:flex; gap: 10px;">
+                <button class="btn btn-danger" style="font-size: 0.9rem; padding: 8px 15px;" onclick="document.getElementById('config-modal').classList.add('hidden')">取消</button>
+                <button class="btn btn-success" style="font-size: 0.9rem; padding: 8px 20px; margin: 0;" onclick="saveGasConfig()">🔗 儲存並連線</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 圖片編輯 Modal -->
+<div id="img-edit-modal" class="edit-img-modal hidden">
+    <div class="edit-img-box">
+        <h4>🖼️ 編輯商品圖片</h4>
+        <div class="img-preview-box" id="img-edit-preview"></div>
+        
+        <div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+            <label style="font-size:0.9rem; color:#666;">選項 A：輸入 Emoji/文字</label>
+            <div style="display:flex; justify-content:center; gap:5px; align-items:center;">
+                <input type="text" id="img-edit-icon-input" placeholder="例如: 🍎" style="width:80px; font-size:1.5rem;" maxlength="5">
+                <button class="btn btn-warning" onclick="aiGenerateIcon()" style="padding:5px 8px; font-size:0.8rem;">🪄 智能生成</button>
+            </div>
+            <button class="btn btn-info" onclick="applyIconEdit()" style="padding:5px 10px; font-size:0.9rem; margin-top:5px;">設定為圖示</button>
+        </div>
+        
+        <div style="margin-bottom:15px;">
+            <label style="font-size:0.9rem; color:#666;">選項 B：上傳圖片</label>
+            <label class="btn btn-primary" style="display:block; margin:5px auto; width:150px; cursor:pointer; font-size:0.9rem; padding:8px;">
+                📂 上傳圖片
+                <input type="file" id="img-edit-file" accept="image/*" style="display:none" onchange="applyPhotoEdit(this)">
+            </label>
+        </div>
+
+        <button class="btn btn-danger" onclick="closeImgEdit()">關閉</button>
+    </div>
+</div>
+
+<script>
+// --- Global State ---
+const defaultStores = [
+    {id:'s1', name:'美味漢堡店', items:[{id:1, name:'漢堡', icon:'🍔', imgType:'icon', stock:5}, {id:2, name:'薯條', icon:'🍟', imgType:'icon', stock:5}, {id:3, name:'可樂', icon:'🥤', imgType:'icon', stock:5}, {id:4, name:'雞塊', icon:'🍗', imgType:'icon', stock:0}]},
+    {id:'s2', name:'陽光文具店', items:[{id:1, name:'鉛筆', icon:'✏️', imgType:'icon', stock:10}, {id:2, name:'橡皮擦', icon:'🟦', imgType:'icon', stock:10}, {id:3, name:'筆記本', icon:'📓', imgType:'icon', stock:5}, {id:4, name:'剪刀', icon:'✂️', imgType:'icon', stock:5}]},
+    {id:'s3', name:'快樂便利商店', items:[{id:1, name:'牛奶', icon:'🥛', imgType:'icon', stock:5}, {id:2, name:'麵包', icon:'🍞', imgType:'icon', stock:5}]},
+    {id:'s4', name:'甜蜜麵包店', items:[{id:1, name:'甜甜圈', icon:'🍩', imgType:'icon', stock:5}, {id:2, name:'蛋糕', icon:'🍰', imgType:'icon', stock:5}]},
+    {id:'s5', name:'夢想玩具店', items:[{id:1, name:'機器人', icon:'🤖', imgType:'icon', stock:2}, {id:2, name:'小熊', icon:'🧸', imgType:'icon', stock:2}]}
+];
+
+let globalData = { stores: [], password: "0000", ttsConfig: { voiceURI: "", replacements: {} }, displayMode: 'emoji' };
+let session = {}; let targetView = '';
+let currentEditTarget = { sIdx: null, iIdx: null }; 
+let adminExpandedStores = new Set(); // Track expanded stores
+
+// 雲端同步相關變數
+let useCloud = false; 
+let gasUrl = '';
+let gasSyncInterval = null;
+let lastSyncTimeStr = '';
+
+function updateSyncTime() {
+    const now = new Date();
+    lastSyncTimeStr = now.getHours().toString().padStart(2, '0') + ':' + 
+                      now.getMinutes().toString().padStart(2, '0') + ':' + 
+                      now.getSeconds().toString().padStart(2, '0');
+    const timeEl = document.getElementById('cloud-sync-time');
+    if(timeEl) timeEl.innerText = `(更新: ${lastSyncTimeStr})`;
+}
+
+function updateCloudStatus(s) { 
+    const badge = document.getElementById('cloud-status-badge');
+    const t = document.getElementById('cloud-status-text');
+    const timeEl = document.getElementById('cloud-sync-time');
+    const linkContainer = document.getElementById('link-share-container');
+    const linkInput = document.getElementById('share-link-input');
+    
+    if(!badge || !t) return;
+    
+    badge.className = "sync-badge";
+    if(s==='online'){
+        badge.classList.add("online");
+        t.innerText="雲端同步中";
+        if(lastSyncTimeStr) timeEl.innerText = `(更新: ${lastSyncTimeStr})`;
+        
+        // 顯示雙機連線網址
+        if (linkContainer && linkInput && gasUrl) {
+            linkContainer.classList.remove('hidden');
+            try {
+                const url = new URL(window.location.href);
+                url.searchParams.set('gas', gasUrl);
+                linkInput.value = url.toString();
+            } catch(e) {
+                linkInput.value = `${window.location.origin}${window.location.pathname}?gas=${encodeURIComponent(gasUrl)}`;
+            }
+        }
+    } else if(s==='connecting'){
+        badge.classList.add("connecting");
+        t.innerText="連線中...";
+        timeEl.innerText = "";
+        if (linkContainer) linkContainer.classList.add('hidden');
+    } else {
+        badge.classList.add("offline");
+        t.innerText="單機模式";
+        if(lastSyncTimeStr) timeEl.innerText = `(本機更新: ${lastSyncTimeStr})`;
+        else timeEl.innerText = "";
+        if (linkContainer) linkContainer.classList.add('hidden');
+    } 
+}
+
+function initApp() {
+    // 檢查是否有網址參數帶來的 gasUrl
+    const urlParams = new URLSearchParams(window.location.search);
+    let paramGas = urlParams.get('gas');
+    if (paramGas) {
+        localStorage.setItem('shopping_gas_url', paramGas);
+        // 清理網址參數 (可選，避免一直複製到舊連結)
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    gasUrl = localStorage.getItem('shopping_gas_url') || '';
+
+    // 載入本地存檔
+    const saved = localStorage.getItem('shopping_data');
+    if (saved) { 
+        try { 
+            const p=JSON.parse(saved); 
+            if(Array.isArray(p)) { globalData.stores=p; globalData.displayMode='emoji'; } 
+            else { globalData=p; }
+            if(!globalData.password)globalData.password="0000"; 
+            if(!globalData.ttsConfig)globalData.ttsConfig={voiceURI:"",replacements:{}};
+            if(!globalData.displayMode)globalData.displayMode='emoji';
+        } catch(e){globalData.stores=JSON.parse(JSON.stringify(defaultStores)); globalData.displayMode='emoji';} 
+    } else { 
+        globalData.stores = JSON.parse(JSON.stringify(defaultStores)); globalData.displayMode='emoji'; 
+    }
+
+    if (gasUrl && gasUrl.startsWith('http')) {
+        startGasSync();
+    } else {
+        updateCloudStatus('offline');
+    }
+    
+    window.speechSynthesis.onvoiceschanged = populateVoiceList; populateVoiceList();
+}
+
+function startGasSync() {
+    if (gasSyncInterval) clearInterval(gasSyncInterval);
+    useCloud = true;
+    updateCloudStatus('connecting');
+    loadGasData();
+    gasSyncInterval = setInterval(loadGasData, 5000);
+}
+
+async function loadGasData() {
+    if (!gasUrl || !gasUrl.startsWith('http')) return;
+    try {
+        const res = await fetch(gasUrl);
+        const json = await res.json();
+        if (json && json.data) {
+            const cloudDataStr = JSON.stringify(json.data);
+            const localDataStr = JSON.stringify(globalData);
+            // 只有在資料真的有差異時才更新畫面，避免打斷使用者編輯
+            if (cloudDataStr !== localDataStr) {
+                globalData = json.data;
+                if(!globalData.password)globalData.password="0000"; 
+                if(!globalData.ttsConfig)globalData.ttsConfig={voiceURI:"",replacements:{}};
+                if(!globalData.displayMode)globalData.displayMode='emoji';
+                refreshUI();
+            }
+            updateSyncTime();
+            updateCloudStatus('online');
+        } else if (json && !json.data) {
+            // 如果雲端尚未有資料，把本地的資料上傳過去
+            saveToCloud();
+        }
+    } catch (e) {
+        console.error("GAS 讀取失敗", e);
+        updateCloudStatus('offline');
+    }
+}
+
+async function saveToCloud() {
+    if (!gasUrl || !gasUrl.startsWith('http')) return;
+    try {
+        updateCloudStatus('connecting');
+        const payload = { id: 'shopping_data', data: globalData };
+        const res = await fetch(gasUrl, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const resData = await res.json();
+        if (resData.status === "error") throw new Error(resData.message);
+        updateSyncTime();
+        updateCloudStatus('online');
+    } catch(e) {
+        console.error("雲端同步失敗", e);
+        alert("儲存至雲端失敗，請檢查網路連線或網址設定。");
+        updateCloudStatus('offline');
+    }
+}
+
+function saveData() { 
+    // 無論如何都存一份本地當作備份
+    localStorage.setItem('shopping_data', JSON.stringify(globalData));
+    updateSyncTime();
+    
+    if(useCloud) {
+        saveToCloud(); 
+    } else {
+        updateCloudStatus('offline');
+    }
+}
+
+function refreshUI() { 
+    if(!document.getElementById('setup-view').classList.contains('hidden')){ updateOOSSelector(); } 
+    if(!document.getElementById('admin-view').classList.contains('hidden')) renderAdminList(); 
+}
+
+function compressImage(b64) { return new Promise(r=>{ const i=new Image(); i.src=b64; i.onload=()=>{ const c=document.createElement('canvas'); let w=i.width, h=i.height; if(w>300){h=Math.round((h*300)/w);w=300;} c.width=w;c.height=h; const x=c.getContext('2d'); x.drawImage(i,0,0,w,h); r(c.toDataURL('image/jpeg',0.6)); } }); }
+
+// --- GAS 教學區塊與連線 ---
+function copyGasCode() {
+    const node = document.getElementById('gas-backend-code');
+    if (node) {
+        navigator.clipboard.writeText(node.innerText.trim())
+            .then(() => alert('✅ 程式碼已複製！'))
+            .catch(() => alert('複製失敗，請手動框選複製。'));
+    }
+}
+
+function openConfigModal() { 
+    const existUrl = localStorage.getItem('shopping_gas_url');
+    if(existUrl) {
+        document.getElementById('gas-url-input').value = existUrl;
+    }
+    document.getElementById('config-modal').classList.remove('hidden'); 
+    document.getElementById('config-error-msg').style.display='none';
+}
+
+function saveGasConfig() { 
+    const inputStr = document.getElementById('gas-url-input').value.trim();
+    if(!inputStr || !inputStr.startsWith('http')) {
+        document.getElementById('config-error-msg').style.display='block';
+        return;
+    }
+    localStorage.setItem('shopping_gas_url', inputStr); 
+    alert("✅ 雲端設定已儲存！系統將重新載入以連線。");
+    location.reload();
+}
+
+function clearGasConfig() {
+    if(confirm("確定要清除雲端設定，返回單機離線模式嗎？\n(您的資料會暫存在這台裝置上)")) {
+        localStorage.removeItem('shopping_gas_url');
+        alert("🧹 雲端設定已清除，即將重新載入。");
+        location.reload();
+    }
+}
+
+function copyShareLink() {
+    const input = document.getElementById('share-link-input');
+    input.select();
+    document.execCommand('copy');
+    alert("✅ 專屬網址已複製！請貼給另一台設備。");
+}
+
+// --- TTS ---
+function populateVoiceList() { 
+    const v = window.speechSynthesis.getVoices().filter(x => x.lang.includes('zh'));
+    v.sort((a,b) => {
+        if(a.lang.includes('TW') && !b.lang.includes('TW')) return -1;
+        if(!a.lang.includes('TW') && b.lang.includes('TW')) return 1;
+        return 0;
+    });
+    document.getElementById('tts-voice-select').innerHTML = '<option value="">預設 (系統自動選擇)</option>' + 
+        v.map(x => `<option value="${x.voiceURI}">${x.name} (${x.lang})</option>`).join('');
+    if(globalData.ttsConfig.voiceURI) document.getElementById('tts-voice-select').value = globalData.ttsConfig.voiceURI; 
+}
+function updateTTSVoice() { globalData.ttsConfig.voiceURI=document.getElementById('tts-voice-select').value; saveData(); }
+function speakText(txt) { 
+    if(!txt)return; 
+    for(let [k,v] of Object.entries(globalData.ttsConfig.replacements)) txt=txt.split(k).join(v); 
+    txt=txt.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g,''); 
+    const u=new SpeechSynthesisUtterance(txt); 
+    u.lang='zh-TW'; u.rate = 1; 
+    const voices = window.speechSynthesis.getVoices();
+    let v = null;
+    if(globalData.ttsConfig.voiceURI) v = voices.find(x => x.voiceURI === globalData.ttsConfig.voiceURI);
+    if(!v) v = voices.find(x => x.lang === 'zh-TW' || x.lang === 'zh_TW' || x.lang === 'zh-Hant-TW');
+    if(!v) v = voices.find(x => x.lang.includes('zh'));
+    if(v) u.voice = v;
+    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); 
+}
+function previewVoice() {
+    const uri = document.getElementById('tts-voice-select').value;
+    const originalURI = globalData.ttsConfig.voiceURI;
+    if(uri) globalData.ttsConfig.voiceURI = uri;
+    speakText("哈囉，你好，歡迎光臨。您好，謝謝光臨。");
+    if(uri) globalData.ttsConfig.voiceURI = originalURI;
+}
+function renderTTSBtn(t) { return `<button class="btn-speak" onclick="speakText('${t.replace(/'/g,"\\'")}');this.classList.add('speaking');setTimeout(()=>this.classList.remove('speaking'),2000);">🔊</button>`; }
+function updateBubblePrice(v) { const t=v?`總共 ${v} 元`:"總共 [ ? ] 元", s=v?`總共${v}元`:"總共幾元"; document.querySelector('.speech-text').innerText=t; const b=document.querySelector('#script-area .btn-speak'); if(b) b.setAttribute('onclick', `speakText('${s}'); this.classList.add('speaking'); setTimeout(()=>this.classList.remove('speaking'),2000);`); }
+function updateBubbleChange(v) { const t=v?`找您 ${v} 元`:"找您 [ ? ] 元", s=v?`找您${v}元`:"找您幾元"; document.querySelector('.speech-text').innerText=t; const b=document.querySelector('#script-area .btn-speak'); if(b) b.setAttribute('onclick', `speakText('${s}'); this.classList.add('speaking'); setTimeout(()=>this.classList.remove('speaking'),2000);`); }
+function updateBubbleCustom(t) { document.querySelector('.speech-text').innerText=t; const b=document.querySelector('#script-area .btn-speak'); if(b) b.setAttribute('onclick', `speakText('${t.replace(/'/g,"\\'")}'); this.classList.add('speaking'); setTimeout(()=>this.classList.remove('speaking'),2000);`); }
+
+// Admin Functions
+function renderPronounceList() { document.getElementById('pronounce-list').innerHTML = Object.entries(globalData.ttsConfig.replacements).map(([k,v])=>`<span style="background:#eee;margin:2px;padding:2px;">${k}➡${v} <span onclick="remP('${k}')" style="cursor:pointer;color:red;">x</span></span>`).join('')||'(無)'; }
+function addPronounce() { const k=document.getElementById('p-key').value.trim(), v=document.getElementById('p-val').value.trim(); if(k&&v){globalData.ttsConfig.replacements[k]=v; saveData(); renderPronounceList(); document.getElementById('p-key').value='';} }
+window.remP = k => { delete globalData.ttsConfig.replacements[k]; saveData(); renderPronounceList(); };
+function changePassword() { const n=prompt(`新密碼 (目前:${globalData.password})`); if(n){globalData.password=n; saveData(); updatePasswordDisplay(); alert("OK");} }
+function resetPasswordOnly() { if(confirm("重置密碼為0000？")){globalData.password="0000"; saveData(); updatePasswordDisplay(); alert("OK");} }
+function updatePasswordDisplay() { const e=document.getElementById('admin-current-pwd'); if(e)e.innerText=globalData.password; }
+function exportJSON() { const b=new Blob([JSON.stringify(globalData)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='shop_data.json'; a.click(); }
+function importJSON(i) { if(!i.files[0])return; const r=new FileReader(); r.onload=e=>{ try{const d=JSON.parse(e.target.result); if(d.stores){globalData=d; saveData(); renderAdminList(); alert(`✅ 成功匯入 ${d.stores.length} 間商店！\n密碼與設定已同步更新。`);}}catch(x){alert("格式錯誤");} }; r.readAsText(i.files[0]); }
+function downloadSampleCSV() { const b=new Blob(["商店,商品,庫存\n漢堡店,漢堡,5"],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='sample.csv'; a.click(); }
+function processCSV(i) { if(!i.files[0])return; const r=new FileReader(); r.onload=e=>{ alert("CSV匯入"); }; r.readAsText(i.files[0]); }
+function promptPassword(t) { targetView=t; document.getElementById('modal-pwd-input').value = ''; document.getElementById('pwd-modal').classList.remove('hidden'); document.getElementById('modal-pwd-input').focus(); }
+function closeModal() { document.getElementById('pwd-modal').classList.add('hidden'); }
+function checkPassword() { if(document.getElementById('modal-pwd-input').value===globalData.password){ closeModal(); targetView==='game'?renderSetup():showAdmin(); }else alert("密碼錯誤。"); document.getElementById('modal-pwd-input').value=''; }
+
+function backToHome() { hideAll(); document.getElementById('home-view').classList.remove('hidden'); document.getElementById('body-tag').className=''; document.getElementById('progress-bar').classList.add('hidden'); }
+function hideAll() { ['home-view','setup-view','game-view','admin-view'].forEach(id=>document.getElementById(id).classList.add('hidden')); }
+function renderSetup() { hideAll(); document.getElementById('setup-view').classList.remove('hidden'); document.getElementById('store-select').innerHTML = globalData.stores.map(s => `<option value="${s.id}">${s.name}</option>`).join(''); updateSetupUI(); }
+
+window.resetDefaultData = () => {
+    if(confirm("確定要重置所有商店資料回到預設值嗎？\n現有的修改將會消失！")) {
+        globalData.stores = JSON.parse(JSON.stringify(defaultStores));
+        adminExpandedStores.clear();
+        saveData();
+        renderAdminList();
+        alert("已重置完畢！");
+    }
+};
+
+window.manualSave = () => {
+    saveData();
+    alert("✅ 設定已儲存！");
+};
+
+window.updateGlobalDisplayMode = (val) => {
+    globalData.displayMode = val;
+    saveData();
+};
+
+function renderAdminList() {
+    document.getElementById('global-display-mode').value = globalData.displayMode || 'emoji';
+    document.getElementById('admin-list').innerHTML = globalData.stores.map((s, si) => {
+        const isOpen = adminExpandedStores.has(si);
+        return `
+        <div class="admin-store-box">
+            <div class="store-header" onclick="toggleStore(${si})">
+                <div style="display:flex; align-items:center; flex:1;">
+                    <span class="store-toggle-icon">${isOpen ? '▲' : '▼'}</span>
+                    <input class="store-name-input" type="text" value="${s.name}" onclick="event.stopPropagation()" onchange="updateStoreName(${si}, this.value)">
+                </div>
+                <button class="btn btn-danger" onclick="event.stopPropagation();delStore(${si})">刪除商店</button>
+            </div>
+            <div id="st-${si}" class="store-items ${isOpen ? '' : 'collapsed'}">
+                ${s.items.map((i,ii) => renderAdminItemRow(si, ii, i)).join('')}
+                <div style="text-align:center; padding:10px;">
+                    <button class="btn btn-success" onclick="addItem(${si})">+ 新增商品</button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderAdminItemRow(si, ii, i) {
+    return `
+    <div class="admin-item-row">
+        <div style="width:60px; height:60px; border:1px solid #ddd; background:#fff; display:flex; align-items:center; justify-content:center; border-radius:8px; overflow:hidden; flex-shrink:0;">
+            ${renderItemImg(i, 'small', true)}
+        </div>
+        <button class="btn btn-info" onclick="openImgEdit(${si},${ii})" style="font-size:0.9rem; padding:8px 10px; margin:0 10px; flex-shrink:0; white-space:nowrap;">
+            更換圖片
+        </button>
+        <div style="flex:1; min-width: 100px;">
+            <label style="font-size:0.8rem; color:#666; display:block; margin-bottom:2px;">商品名稱</label>
+            <input type="text" value="${i.name}" onchange="updateItemProp(${si},${ii},'name',this.value)" lang="zh-TW" style="font-size:1.2rem; width:100%; border:1px solid #ccc; padding:8px; border-radius:5px; height:45px;">
+        </div>
+        <div style="flex:0 0 80px;">
+             <label style="font-size:0.8rem; color:#666; display:block; margin-bottom:2px; text-align:center;">庫存</label>
+            <input type="number" inputmode="numeric" pattern="[0-9]*" value="${i.stock}" onchange="updateItemProp(${si},${ii},'stock',this.value)" style="width:100%; padding:8px; font-size:1.2rem; border:1px solid #ccc; border-radius:5px; height:45px; text-align:center;">
+        </div>
+        <div style="flex:0 0 auto; padding-left:10px;">
+            <button class="btn btn-danger" onclick="delItem(${si},${ii})" style="padding:10px 15px; height:45px; margin-top:18px;">🗑️</button>
+        </div>
+    </div>`;
+}
+
+window.updateStoreName = (si, val) => { globalData.stores[si].name = val; saveData(); };
+window.updateItemProp = (si, ii, prop, val) => { 
+    if(prop === 'stock') val = parseInt(val) || 0;
+    globalData.stores[si].items[ii][prop] = val; 
+    saveData(); 
+};
+
+window.toggleStore = i => {
+    const el = document.getElementById(`st-${i}`);
+    if (el.classList.contains('collapsed')) {
+        adminExpandedStores.add(i);
+    } else {
+        adminExpandedStores.delete(i);
+    }
+    renderAdminList(); 
+};
+window.delStore = i => { 
+    if(confirm(`確定要刪除「${globalData.stores[i].name}」嗎？此操作無法復原！`)){
+        globalData.stores.splice(i,1); 
+        adminExpandedStores.delete(i); 
+        saveData(); renderAdminList();
+    } 
+};
+window.delItem = (si,ii) => { 
+    if(confirm(`確定要刪除「${globalData.stores[si].items[ii].name}」嗎？`)){
+        globalData.stores[si].items.splice(ii,1); saveData(); renderAdminList();
+    } 
+};
+window.addItem = si => { 
+    globalData.stores[si].items.push({id:Date.now(), name:"新品", icon:"📦", imgType:"icon", stock:5}); 
+    adminExpandedStores.add(si);
+    saveData(); 
+    renderAdminList(); 
+};
+window.addNewStore = () => { 
+    const n=prompt("請輸入新商店名稱："); 
+    if(n){
+        globalData.stores.push({id:'s'+Date.now(),name:n,items:[]}); 
+        saveData(); 
+        renderAdminList(); 
+    }; 
+};
+
+// --- Image Editing & AI ---
+const emojiMap = {
+    '漢堡':'🍔', '薯條':'🍟', '可樂':'🥤', '雞塊':'🍗', '鉛筆':'✏️', '橡皮擦':'🟦', '筆記本':'📓', '剪刀':'✂️', '牛奶':'🥛', '麵包':'🍞', '甜甜圈':'🍩', '蛋糕':'🍰', '機器人':'🤖', '小熊':'🧸', '蘋果':'🍎', '香蕉':'🍌', '西瓜':'🍉', '葡萄':'🍇', '草莓':'🍓', '車':'🚗', '飛機':'✈️', '貓':'🐱', '狗':'🐶', '魚':'🐟', '花':'🌸', '書':'📖', '球':'⚽', '衣服':'👕', '鞋子':'👟', '帽':'🧢', '水':'💧', '火':'🔥', '家':'🏠'
+};
+
+window.openImgEdit = (si, ii) => {
+    currentEditTarget = { sIdx: si, iIdx: ii };
+    const item = globalData.stores[si].items[ii];
+    const preview = document.getElementById('img-edit-preview');
+    preview.innerHTML = renderItemImg(item, 'normal', true); 
+    document.getElementById('img-edit-icon-input').value = (item.imgType==='icon') ? item.icon : '';
+    document.getElementById('img-edit-file').value = ''; 
+    document.getElementById('img-edit-modal').classList.remove('hidden');
+};
+
+window.closeImgEdit = () => {
+    document.getElementById('img-edit-modal').classList.add('hidden');
+    currentEditTarget = { sIdx: null, iIdx: null };
+};
+
+window.aiGenerateIcon = () => {
+    const val = document.getElementById('img-edit-icon-input').value.trim();
+    if(!val) return alert("請先輸入文字");
+    let found = emojiMap[val];
+    if(!found) {
+        for(let k in emojiMap) {
+            if(val.includes(k)) { found = emojiMap[k]; break; }
+        }
+    }
+    if(found) {
+        document.getElementById('img-edit-icon-input').value = found;
+    } else {
+        alert("找不到適合的圖示。\n\n建議方式：\n1. 上網搜尋並複製 Emoji\n2. 使用手機/平板鍵盤輸入 Emoji");
+    }
+};
+
+window.applyIconEdit = () => {
+    const val = document.getElementById('img-edit-icon-input').value.trim();
+    if(!val) return alert("請輸入 Emoji 或文字");
+    const { sIdx, iIdx } = currentEditTarget;
+    globalData.stores[sIdx].items[iIdx].icon = val;
+    globalData.stores[sIdx].items[iIdx].imgType = 'icon';
+    saveData();
+    renderAdminList();
+    closeImgEdit();
+};
+
+window.applyPhotoEdit = (input) => {
+    if(input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            compressImage(e.target.result).then(base64 => {
+                const { sIdx, iIdx } = currentEditTarget;
+                globalData.stores[sIdx].items[iIdx].imgData = base64;
+                globalData.stores[sIdx].items[iIdx].imgType = 'url';
+                saveData();
+                renderAdminList();
+                closeImgEdit();
+            });
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
+window.renderItemImg = (item, size='normal', ignoreGlobal=false) => { 
+    let usePhoto = false;
+    if (ignoreGlobal) {
+        usePhoto = (item.imgType === 'url');
+    } else {
+        if (globalData.displayMode === 'emoji') {
+            usePhoto = false;
+        } else {
+            usePhoto = (item.imgType === 'url' && item.imgData);
+        }
+    }
+
+    if(usePhoto && item.imgData) {
+        return `<img src="${item.imgData}" class="item-img-real" style="${size==='small'?'width:50px;height:50px;':'width:100px;height:100px;'}">`;
+    } else {
+        return `<span class="item-img" style="${size==='small'?'font-size:2rem':''}">${item.icon}</span>`;
+    }
+};
+
+window.switchL5GuestState = () => { 
+    session.l5GuestState = 'alt';
+    session.step = 1; 
+    renderStep(); 
+};
+
+initApp();
+
+function updateSetupUI() {
+    const l=document.getElementById('level-select').value, r=document.getElementById('role-select').value;
+    const bs=document.getElementById('boss-settings'), cs=document.getElementById('cust-settings');
+    const bsub = document.getElementById('boss-subtotal-setting-container');
+    
+    r==='boss'?(bs.classList.remove('hidden'),cs.classList.add('hidden')):(bs.classList.add('hidden'),cs.classList.remove('hidden'),l==='3'?document.getElementById('menu-setting').classList.remove('hidden'):document.getElementById('menu-setting').classList.add('hidden'));
+    
+    if (r === 'boss' && ['3','4','5'].includes(l)) {
+        bsub.classList.remove('hidden');
+    } else {
+        bsub.classList.add('hidden');
+    }
+
+    const q=document.getElementById('quantity-label'), dup=document.getElementById('setup-duplicate'), oos=document.getElementById('setup-oos-area');
+    ['1','3'].includes(l)?(q.innerText="3. 本回合要買幾樣商品/配菜？(自由選)",dup.classList.add('hidden')):(q.innerText="3. 購物清單要指定幾樣商品？(系統抽)",dup.classList.remove('hidden'));
+    l==='5'?(oos.classList.remove('hidden'),updateOOSSelector()):oos.classList.add('hidden');
+}
+function updateOOSSelector() {
+    const sid=document.getElementById('store-select').value, s=globalData.stores.find(x=>x.id===sid);
+    const cnt=parseInt(document.getElementById('oos-count').value)||1, c=document.getElementById('oos-pairs-container'); c.innerHTML='';
+    if(s) { for(let i=1;i<=cnt;i++) {
+        let opts=s.items.map(it=>`<option value="${it.id}">${it.name}</option>`).join('');
+        let alts=s.items.map((it,idx)=>`<option value="${it.id}" ${idx===i?'selected':''}>${it.name}</option>`).join('');
+        c.insertAdjacentHTML('beforeend', `<div class="oos-row"><label>第 ${i} 組：缺貨商品 → 替代商品</label><div style="display:flex;gap:5px;"><select id="oos-item-${i}" style="flex:1;">${opts}</select><span>➡</span><select id="alt-item-${i}" style="flex:1;">${alts}</select></div></div>`);
+    }}
+}
+function startGame() {
+    const sid=document.getElementById('store-select').value, s=globalData.stores.find(x=>x.id===sid); if(!s) return alert("發生錯誤，請重新選擇。");
+    const lvl=document.getElementById('level-select').value, qty=parseInt(document.getElementById('item-quantity').value);
+    session = {
+        store:s, level:lvl, role:document.getElementById('role-select').value, step:1, itemsToBuy:[], cart:[],
+        bossInputPrice:null, bossInputReceived:null, bossInputChange:null, bossQuoteConfirmed: false,
+        mathDiff:document.getElementById('math-diff').value, mathHintMode:document.getElementById('math-hint-mode').value,
+        showMenu:document.getElementById('show-menu').value==='yes', qty:qty,
+        altResponseMode:document.getElementById('alt-response-mode').value, oosPairs:[],
+        showSubtotal:document.getElementById('show-subtotal-mode').value==='yes',
+        l5GuestState:'list'
+    };
+    let used=[]; session.store.items.forEach(i=>{i.price=getUniquePrice(session.mathDiff,used); used.push(i.price);});
+
+    if(lvl==='5') {
+        const cnt=parseInt(document.getElementById('oos-count').value);
+        let specIds=[];
+        for(let i=1;i<=cnt;i++) {
+            let oId=document.getElementById(`oos-item-${i}`).value, aId=document.getElementById(`alt-item-${i}`).value;
+            let o=s.items.find(x=>x.id==oId), a=s.items.find(x=>x.id==aId);
+            if(o&&a&&o.id===a.id) { let oth=s.items.find(x=>x.id!==o.id); if(oth) a=oth; }
+            if(o&&a) { session.oosPairs.push({oos:o, alt:a}); specIds.push(o.id); }
+        }
+        let minQ=session.oosPairs.length+1; if(qty<minQ) session.qty=minQ;
+        session.itemsToBuy=session.oosPairs.map(p=>p.oos);
+        let pool=s.items.filter(i=>!specIds.includes(i.id)), need=session.qty-session.itemsToBuy.length, dup=document.getElementById('allow-duplicate').value==='yes';
+        for(let k=0;k<need;k++) { if(pool.length===0&&!dup)break; let idx=Math.floor(Math.random()*pool.length); session.itemsToBuy.push(pool[idx]); if(!dup)pool.splice(idx,1); }
+    } else if(['2','4','6'].includes(lvl)) {
+        let pool=s.items.filter(i=>i.stock>0), dup=document.getElementById('allow-duplicate').value==='yes';
+        if(pool.length===0) return alert("哎呀，沒有庫存了。");
+        if(!dup&&qty>pool.length) session.qty=pool.length;
+        for(let i=0;i<session.qty;i++) { if(!dup&&pool.length===0)break; let idx=Math.floor(Math.random()*pool.length); session.itemsToBuy.push(pool[idx]); if(!dup)pool.splice(idx,1); }
+    }
+    document.getElementById('body-tag').className = session.role==='boss'?'boss-mode':'cust-mode';
+    hideAll(); document.getElementById('game-view').classList.remove('hidden'); renderProgressBar(); renderStep();
+}
+function getUniquePrice(d,u) { let p,c=0; do{p=d==='10'?Math.floor(Math.random()*9)+1:Math.floor(Math.random()*45)+5; c++; if(d==='10'){if(u.filter(x=>x===p).length<3)break;}else{if(!u.includes(p))break;}}while(c<20); return p; }
+
+function nextStep() { if(validateStep()) { session.step++; renderStep(); updateProgressBar(); } }
+function validateStep() {
+    if(session.role === 'cust' && session.level === '2' && session.step === 1) {
+        const unchecked = document.querySelectorAll('.check-item:not(.checked)').length;
+        if(unchecked > 0) return alert("還有物品沒有買齊喔，再看一下。") && false;
+    }
+    
+    if(session.role==='boss') {
+        const getV=id=>{const e=document.getElementById(id);if(!e)return null;const v=parseInt(e.value);return isNaN(v)?null:v;};
+        if(session.step===1 && ['3','4','5'].includes(session.level) && session.cart.length===0) return alert("🛒 請先點選餐點！")&&false;
+        if(session.step===3) { let v=getV('boss-input-received'); if(v===null) return alert("請輸入數字")&&false; if(v<session.bossInputPrice) return alert("錢好像不夠喔，再算算看？")&&false; session.bossInputReceived=v; }
+        if(session.step===4) { 
+            const calcPaid = getV('calc-paid');
+            const calcTotal = getV('calc-total');
+            if (calcPaid !== null && calcTotal !== null) {
+                if (calcPaid !== session.bossInputReceived || calcTotal !== session.bossInputPrice) {
+                    return alert("算式填錯囉，我們再看一下") && false;
+                }
+            }
+            let v=getV('boss-input-change'); 
+            if(v===null) return alert("請輸入數字")&&false; 
+            if(v!==session.bossInputReceived-session.bossInputPrice) return alert("金額不對喔，我們再試試看")&&false; 
+            session.bossInputChange=v; 
+        }
+    }
+    return true;
+}
+
+window.confirmQuote = () => {
+    const getV=id=>{const e=document.getElementById(id);if(!e)return null;const v=parseInt(e.value);return isNaN(v)?null:v;};
+    let v=getV('boss-input-total'); 
+    if(v===null) return alert("請輸入數字");
+    
+    if(['3','4','5'].includes(session.level)) {
+        let corr=session.cart.reduce((a,b)=>a+b.price,0); 
+        if(v!==corr) return alert("金額不對喔，我們再試試看");
+    }
+    
+    session.bossInputPrice = v;
+    session.bossQuoteConfirmed = true;
+    renderStep(); 
+};
+
+function renderStep() {
+    const btn=document.getElementById('main-action-btn'), c=document.getElementById('card-area'), sb=document.getElementById('script-area');
+    btn.style.display = 'block'; 
+    btn.onclick=nextStep; btn.innerText="下一步"; btn.classList.remove('btn-success'); c.innerHTML=''; sb.classList.remove('hidden');
+    const setBubble = (d,s) => { sb.innerHTML = renderTTSBtn(s||d) + `<span class="speech-text">${d}</span>`; };
+    
+    if(session.level==='5') renderL5(c, setBubble, btn);
+    else if(['3','4'].includes(session.level)) renderL34(c, setBubble, btn);
+    else renderL12(c, setBubble, btn);
+    
+    if(session.role==='boss' && session.step>4) renderEndScreen(c,sb,btn);
+    if(session.role==='cust' && session.step>4) renderEndScreen(c,sb,btn); 
+}
+
+function renderL12(c, setBubble, btn) {
+    if(session.step===1) {
+        if(session.role==='boss') { c.innerHTML=`<h1>⏳</h1><h2>等待客人...</h2>`; btn.innerText="客人來了"; setBubble("你好，歡迎光臨！"); }
+        else { 
+            if (session.level === '2') {
+                let items = session.itemsToBuy.map(i=>i.name).join('、');
+                setBubble("老闆，我要買 " + items);
+                c.innerHTML=`<h2>📋 清單</h2>${session.itemsToBuy.map(i=>`<div class="check-item" onclick="this.classList.toggle('checked')">${renderItemImg(i,'small')}<span>${i.name}</span><div class="check-box"></div></div>`).join('')}`;
+                btn.innerText="挑好了";
+            } else {
+                setBubble("老闆你好，我要買東西"); 
+                c.innerHTML=`<h2>🛍️ 指令</h2><p style="font-size:2rem">請挑選 <span style="color:var(--rose-dark);font-weight:bold;">${session.qty}</span> 樣商品</p>`; 
+                btn.innerText="挑好了"; 
+            }
+        }
+    } else if(session.step===2) {
+        if(session.role==='cust') { setBubble("老闆，請問多少錢？"); c.innerHTML=`<h1>🗣️</h1>`; btn.innerText="說完了"; }
+        else { 
+            if (!session.bossQuoteConfirmed) {
+                setBubble("總共 [ ? ] 元", "總共幾元"); 
+                c.innerHTML=`<h2>📋 價目表</h2><div class="item-grid">${session.store.items.map(i=>`<div class="item-card">${renderItemImg(i)}<span>${i.name} $${i.price}</span></div>`).join('')}</div><hr><label>總共？</label><input type="number" id="boss-input-total" class="big-input" inputmode="numeric" pattern="[0-9]*" oninput="updateBubblePrice(this.value)">`; 
+                btn.innerText="確認金額"; 
+                btn.onclick = confirmQuote;
+            } else {
+                setBubble(`總共 ${session.bossInputPrice} 元`);
+                c.innerHTML=`<h2>📋 價目表</h2><div class="item-grid">${session.store.items.map(i=>`<div class="item-card">${renderItemImg(i)}<span>${i.name} $${i.price}</span></div>`).join('')}</div><hr><label>總共？</label><input type="number" id="boss-input-total" class="big-input" value="${session.bossInputPrice}" disabled>`; 
+                btn.innerText="我說完多少錢了";
+                btn.onclick = nextStep;
+            }
+        }
+    } else renderCommon(session.step, c, setBubble, btn);
+}
+
+function renderL34(c, setBubble, btn) {
+    if(session.step===1) {
+        if(session.role==='boss') { setBubble("好的，我幫你點餐"); renderPOS(c); btn.innerText="點餐完畢"; }
+        else { 
+            if (session.level === '4') {
+                let items = session.itemsToBuy.map(i=>i.name).join('、');
+                setBubble("老闆，我要點 " + items);
+                c.innerHTML=`<h2>📝 任務</h2>` + session.itemsToBuy.map(i=>`<div style="font-size:1.5rem;margin:10px;">🔹 ${i.name}</div>`).join('');
+                btn.innerText="點完了";
+            } else {
+                setBubble("老闆，我要點...(自己決定)"); 
+                if (session.showMenu) {
+                    c.innerHTML=`<h2>🤔 請挑選</h2><div class="cust-menu-grid">${session.store.items.map(i=>`<div class="item-card" style="width:auto;">${renderItemImg(i,'small')}<span style="display:block;font-size:0.9rem;">${i.name}</span></div>`).join('')}</div>`;
+                } else {
+                    c.innerHTML=`<h2>👂 (無菜單)</h2>`;
+                }
+                btn.innerText="點完了"; 
+            }
+        }
+    } else if(session.step===2) {
+        if(session.role==='cust') { setBubble("請問多少錢？"); c.innerHTML=`<h1>🗣️</h1>`; btn.innerText="說完了"; }
+        else { 
+            if (!session.bossQuoteConfirmed) {
+                setBubble("總共 [ ? ] 元", "總共幾元"); 
+                renderCheckoutList(c, false); 
+                btn.innerText="確認金額";
+                btn.onclick = confirmQuote;
+            } else {
+                setBubble(`總共 ${session.bossInputPrice} 元`);
+                renderCheckoutList(c, true);
+                btn.innerText="我說完多少錢了";
+                btn.onclick = nextStep;
+            }
+        }
+    } else renderCommon(session.step, c, setBubble, btn);
+}
+
+function renderL5(c, setBubble, btn) {
+    if(session.step===1) {
+        if(session.role==='boss') {
+            let h = session.oosPairs.map(p => `${p.oos.name}❌ ➡ ${p.alt.name}⭕`).join('、');
+            c.innerHTML = `<div class="boss-l5-hint" title="${h}">💡 缺貨提示：${h}</div>`; renderPOS(c, h); setBubble("你好，歡迎光臨！"); btn.innerText="點餐完畢";
+        } else {
+            if(session.l5GuestState === 'alt') {
+                 if(session.altResponseMode==='open') { setBubble("請問還有什麼？"); c.innerHTML=`<h2>💡 開放式詢問</h2><p>因為缺貨了，請詢問老闆還有什麼可以買。</p>`; }
+                 else { 
+                    let an = session.oosPairs.map(p=>p.alt.name).join('、'); setBubble(`那請問有 ${an} 嗎？`);
+                    let arrows = session.oosPairs.map(p => `<div style="display:flex; align-items:center; gap:5px; margin:10px; background:#fff; padding:10px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);"><div class="item-card oos-style" style="transform:scale(0.8);">${renderItemImg(p.oos)}<div class="badge-oos">缺貨</div></div><div class="swap-arrow">➡<div class="swap-text">換</div></div><div class="item-card" style="transform:scale(0.8);">${renderItemImg(p.alt)}</div></div>`).join('');
+                    c.innerHTML=`<h2>💡 替代方案</h2><div style="display:flex;justify-content:center;flex-wrap:wrap;">${arrows}</div>`;
+                }
+                btn.innerText="我點好餐了，下一步";
+                btn.onclick = () => { session.step++; renderStep(); updateProgressBar(); };
+            } else {
+                let n = session.itemsToBuy.map(i=>i.name).join('、'); setBubble(`老闆，我要買 ${n}`); 
+                c.innerHTML = `<h2>🛍️ 購物清單</h2><div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">${session.itemsToBuy.map(i => `<div class="item-card">${renderItemImg(i)}<span class="item-name">${i.name}</span></div>`).join('')}</div><button class="btn btn-warning" onclick="switchL5GuestState()">💬 老闆說沒貨...</button>`;
+                btn.style.display = 'none';
+            }
+        }
+    } else if(session.step===2) {
+        if(session.role==='boss') { 
+            if (!session.bossQuoteConfirmed) {
+                setBubble("總共 [ ? ] 元", "總共幾元"); 
+                renderCheckoutList(c, false); 
+                btn.innerText="確認金額";
+                btn.onclick = confirmQuote;
+            } else {
+                setBubble(`總共 ${session.bossInputPrice} 元`);
+                renderCheckoutList(c, true);
+                btn.innerText="我說完多少錢了";
+                btn.onclick = nextStep;
+            }
+        }
+        else { setBubble("請問多少錢？"); c.innerHTML=`<h1>🗣️</h1>`; btn.innerText="說完了"; session.l5GuestState = 'list'; }
+    } else renderCommon(session.step, c, setBubble, btn);
+}
+
+function renderCommon(ph, c, setBubble, btn) {
+    if(ph===3) {
+        if(session.role==='boss') { setBubble("收錢中...", "收錢中"); c.innerHTML=`<h2>💵 收錢</h2><p>應收 $${session.bossInputPrice}</p><label>收了多少？</label><input type="number" id="boss-input-received" class="big-input" inputmode="numeric" pattern="[0-9]*">`; btn.innerText="確認"; }
+        else { setBubble("付錢給老闆"); c.innerHTML=`<h1>💰</h1>`; btn.innerText="給錢"; }
+    } else if(ph===4) {
+        if(session.role==='boss') {
+            const r=session.bossInputReceived, p=session.bossInputPrice;
+            if(r==p) {
+                setBubble(`收您 ${r} 元，謝謝光臨！`); c.innerHTML=`<h1>✅ 剛好</h1>`;
+                btn.innerText="說完了，結束交易"; btn.classList.add('btn-success'); btn.onclick=()=>{session.step=100;renderStep();};
+            } else {
+                setBubble("找您 [ ? ] 元", "找您幾元");
+                let hint = session.mathHintMode==='direct' ? `<div style="font-size:2rem;">${r} - ${p} = <span style="color:var(--rose-dark)">?</span></div>` : `<div class="math-hint-container"><div class="math-input-group"><span class="math-label">客付</span><input type="number" id="calc-paid" class="math-gap"></div><div class="math-symbol">-</div><div class="math-input-group"><span class="math-label">總額</span><input type="number" id="calc-total" class="math-gap"></div><div class="math-symbol">=</div><span>?</span></div>`;
+                c.innerHTML=`<h2>🧮 找錢</h2>${hint}<hr><label>找多少？</label><input type="number" id="boss-input-change" class="big-input" inputmode="numeric" pattern="[0-9]*" oninput="updateBubbleChange(this.value)">`;
+                btn.innerText="確認金額";
+                btn.onclick = () => {
+                    if(validateStep()) {
+                        setBubble(`收您 ${r} 元，找您 ${session.bossInputChange} 元，謝謝光臨！`);
+                        c.querySelectorAll('input').forEach(i=>i.disabled=true);
+                        btn.innerText="說完了，結束交易"; btn.classList.add('btn-success');
+                        btn.onclick=()=>{session.step=100;renderStep();};
+                    }
+                };
+            }
+        } else {
+            setBubble("謝謝"); 
+            c.innerHTML=`<h2>⏳ 等待找錢...</h2>`; btn.innerText="拿發票/找錢"; btn.onclick=()=>{session.step=100;renderStep();}; 
+        }
+    }
+}
+
+function renderCheckoutList(c, locked) {
+    let grp={}; session.cart.forEach(x=>{if(!grp[x.id])grp[x.id]={...x,qty:0};grp[x.id].qty++;});
+    let h=Object.values(grp).map(i=>`<tr><td>${i.name}</td><td>$${i.price}</td><td>x${i.qty}</td><td class="quote-total-cell">${session.showSubtotal?`$${i.price*i.qty}`:'?'}</td></tr>`).join('');
+    c.innerHTML=`<h2>🧾 訂單確認</h2><table class="quote-table"><thead><tr><th>品項</th><th>單價</th><th>數量</th><th>總價</th></tr></thead><tbody>${h}</tbody></table><hr><label>總共？</label><input type="number" id="boss-input-total" class="big-input" inputmode="numeric" pattern="[0-9]*" ${locked?'disabled':''} value="${locked?session.bossInputPrice:''}" oninput="updateBubblePrice(this.value)">`;
+}
+function renderPOS(c, h=null) {
+    let grp={}; session.cart.forEach(x=>{if(!grp[x.id])grp[x.id]={...x,qty:0};grp[x.id].qty++;});
+    let its=session.store.items.map(i=>{
+        let inC=session.cart.filter(x=>x.id===i.id).length, rem=i.stock-inC, dis=rem<=0?'disabled-item':'', oos=(session.level==='5'&&session.oosPairs.find(p=>p.oos.id===i.id))?'<div class="badge-oos">缺貨</div>':'';
+        return `<div class="item-card ${dis}" onclick="${rem>0?`addToCart(${i.id})`:''}">${oos}${renderItemImg(i,'small')}<span>${i.name}</span><span style="font-size:0.8rem">剩${rem}</span></div>`;
+    }).join('');
+    let lst=Object.values(grp).map(i=>`<tr><td>${i.name}</td><td>x${i.qty}</td><td><button class="pos-btn-minus" onclick="remOne(${i.id})">➖</button></td><td><button class="pos-btn-del" onclick="remAll(${i.id})">✖</button></td></tr>`).join('')||'<tr><td colspan="4">(空)</td></tr>';
+    c.innerHTML=`${h?`<div class="boss-l5-hint">💡 提示：${h}</div>`:''}<div style="display:flex;width:100%;gap:10px;flex:1;min-height:0;"><div style="flex:2;overflow-y:auto;" class="item-grid">${its}</div><div style="flex:1;background:#eee;border-radius:10px;padding:5px;overflow-y:auto;" class="pos-list-container"><table class="pos-table"><thead><tr><th>品名</th><th>數</th><th>減</th><th>刪</th></tr></thead><tbody>${lst}</tbody></table></div></div>`;
+}
+function addToCart(id) {
+    let i=session.store.items.find(x=>x.id==id);
+    if(session.level==='5') {
+        if(session.oosPairs.find(p=>p.oos.id===id)) { 
+            updateBubbleCustom(`抱歉，${i.name} 賣完了`); 
+            return; 
+        } else if(session.oosPairs.find(p=>p.alt.id===id)) {
+            updateBubbleCustom(`有喔，我們有 ${i.name}`);
+        } else {
+            updateBubbleCustom(`好的，${i.name}`);
+        }
+    }
+    session.cart.push({id:i.id,name:i.name,price:i.price}); 
+    renderPOS(document.getElementById('card-area'), session.level==='5'?session.oosPairs.map(p => `${p.oos.name}❌➡${p.alt.name}⭕`).join('、'):null);
+}
+function remOne(id){ let idx=session.cart.findIndex(x=>x.id===id); if(idx!==-1)session.cart.splice(idx,1); renderPOS(document.getElementById('card-area')); }
+function remAll(id){ session.cart=session.cart.filter(x=>x.id!==id); renderPOS(document.getElementById('card-area')); }
+function renderProgressBar() {
+    const b=document.getElementById('progress-bar'); b.classList.remove('hidden');
+    let steps=[];
+    if(session.level==='5') steps=['點餐/詢問', '報價', '付錢', '找錢/完成'];
+    else if(['3','4'].includes(session.level)) steps=['點餐/POS', '報價', '收錢', '找錢/完成'];
+    else steps=['選購/清單', '報價', '收錢', '找錢/完成'];
+    b.style.setProperty('--step-count', steps.length);
+    b.innerHTML=`<div class="progress-track-container"><div class="progress-track-bg"></div><div class="progress-track-fill" id="progress-track-fill"></div></div>`+steps.map((s,i)=>`<div class="progress-step" id="ps-${i}"><span>${s}</span></div>`).join('');
+    updateProgressBar();
+}
+function updateProgressBar() {
+    let idx = session.step - 1;
+    const total = document.querySelectorAll('.progress-step').length; if(idx>=total) idx=total-1;
+    document.querySelectorAll('.progress-step').forEach((el, i) => { i<=idx?el.classList.add('active'):el.classList.remove('active'); });
+    const fill = document.getElementById('progress-track-fill'); if(fill) fill.style.width = ((idx/(total-1))*100) + "%";
+}
+function renderEndScreen(c, sb, btn) { sb.classList.add('hidden'); c.innerHTML=`<h1 style="font-size:4rem;color:var(--rose-dark);margin-top:50px;">🎉 交易成功！</h1>`; btn.innerText="🏠 返回首頁"; btn.classList.remove('btn-success'); btn.onclick=()=>location.reload(); document.getElementById('progress-bar').classList.add('hidden'); }
+function showAdmin() { hideAll(); document.getElementById('admin-view').classList.remove('hidden'); renderAdminList(); renderPronounceList(); updatePasswordDisplay(); }
+</script>
+</body>
+</html>
